@@ -12,7 +12,7 @@ CREATE TABLE users (
     -- user profile
     display_name         TEXT NOT NULL,
     avatar_file_id       INTEGER REFERENCES files(id),
-    last_seen_at         INTEGER NOT NULL DEFAULT 0,
+    last_seen_at         INTEGER NOT NULL,
     status TEXT NOT NULL DEFAULT 'default' CHECK (status IN ('default', 'dnd', 'offline')),
 
     -- visibility
@@ -136,11 +136,14 @@ CREATE TABLE conversations (
     deleted_at      INTEGER,
 
     CHECK (
-        (type = 'group'  AND user_a_id IS NULL AND user_b_id IS NULL AND name IS NOT NULL) OR
-        (type = 'direct' AND user_a_id IS NOT NULL AND user_b_id IS NOT NULL AND user_a_id < user_b_id) OR
-        (type = 'self'   AND user_a_id IS NULL AND user_b_id IS NULL)
+        (type = 'group' AND user_a_id IS NULL AND user_b_id IS NULL AND name IS NOT NULL) OR
+        (type = 'direct' AND user_a_id IS NOT NULL AND user_b_id IS NOT NULL AND user_a_id < user_b_id
+            AND created_by IN (user_a_id, user_b_id)
+            AND name IS NULL AND description IS NULL AND avatar_file_id IS NULL) OR
+        (type = 'self' AND user_a_id IS NULL AND user_b_id IS NULL
+            AND name IS NULL AND description IS NULL AND avatar_file_id IS NULL)
     )
-    
+
 ) STRICT;
 
 CREATE UNIQUE INDEX conversations_pair_uq
@@ -213,7 +216,10 @@ CREATE TABLE messages (
     edited_at              INTEGER,
     deleted_at             INTEGER,
 
-    CHECK ((kind = 'system') = (system_event IS NOT NULL))
+    CHECK (
+        (kind = 'text' AND system_event IS NULL AND system_data IS NULL) OR
+        (kind = 'system' AND system_event IS NOT NULL)
+    )
 
 ) STRICT;
 
@@ -233,6 +239,7 @@ CREATE TABLE attachments (
 
 ) STRICT, WITHOUT ROWID;
 
+CREATE UNIQUE INDEX attachments_position_uq ON attachments (message_id, position);
 CREATE INDEX attachments_file_idx ON attachments (file_id);
 
 
