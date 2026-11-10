@@ -12,12 +12,7 @@ CREATE TABLE users (
     -- user profile
     display_name         TEXT NOT NULL,
     avatar_file_id       INTEGER REFERENCES files(id),
-    last_seen_at         INTEGER NOT NULL,
-    status TEXT NOT NULL DEFAULT 'default' CHECK (status IN ('default', 'dnd', 'offline')),
-
-    -- visibility
-    avatar_visibility    TEXT NOT NULL DEFAULT 'everyone' CHECK (avatar_visibility IN ('everyone', 'friends', 'nobody')),
-    last_seen_visibility TEXT NOT NULL DEFAULT 'everyone' CHECK (last_seen_visibility IN ('everyone', 'friends', 'nobody')),
+    status               TEXT NOT NULL DEFAULT 'default' CHECK (status IN ('default', 'dnd', 'offline')),
 
     -- common
     created_at           INTEGER NOT NULL,
@@ -50,7 +45,7 @@ CREATE INDEX tokens_expires_idx ON tokens (expires_at);
 
 -- ---------------------------- FRIENDSHIPS --------------------------------
 
-CREATE TABLE friendships (
+CREATE TABLE friends (
     requester_id INTEGER NOT NULL REFERENCES users(id),
     addressee_id INTEGER NOT NULL REFERENCES users(id),
     status       TEXT NOT NULL CHECK (status IN ('pending', 'accepted')),
@@ -62,9 +57,9 @@ CREATE TABLE friendships (
 
 ) STRICT, WITHOUT ROWID;
 
-CREATE UNIQUE INDEX friendships_pair_uq
-    ON friendships (min(requester_id, addressee_id), max(requester_id, addressee_id));
-CREATE INDEX friendships_addressee_idx ON friendships (addressee_id);
+CREATE UNIQUE INDEX friends_pair_uq
+    ON friends (min(requester_id, addressee_id), max(requester_id, addressee_id));
+CREATE INDEX friends_addressee_idx ON friends (addressee_id);
 
 
 -- ---------------------------- BLOCKS --------------------------------------
@@ -129,8 +124,6 @@ CREATE TABLE conversations (
 
     -- common
     created_by      INTEGER NOT NULL REFERENCES users(id),
-    last_message_at INTEGER,
-
     created_at      INTEGER NOT NULL,
     updated_at      INTEGER NOT NULL,
     deleted_at      INTEGER,
@@ -224,7 +217,7 @@ CREATE TABLE messages (
 ) STRICT;
 
 CREATE INDEX messages_conv_id_idx      ON messages (conversation_id, id);          -- history paging, unread counts
-CREATE INDEX messages_conv_updated_idx ON messages (conversation_id, updated_at);  -- client sync
+CREATE INDEX messages_conv_updated_idx ON messages (conversation_id, updated_at, id);  -- client sync
 CREATE UNIQUE INDEX messages_public_id_uq  ON messages (sender_id, public_id) WHERE public_id IS NOT NULL;
 
 
