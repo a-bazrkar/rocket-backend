@@ -7,6 +7,7 @@ import (
 	"github.com/a-bazrkar/rocket-backend/internal/packages/database"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/storage"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/token"
 	"github.com/a-bazrkar/rocket-backend/internal/transport/rest"
 	"github.com/spf13/viper"
 )
@@ -42,6 +43,11 @@ func Load() (*Config, error) {
 		HTTP: rest.Config{
 			Host: loadString("HTTP_HOST"),
 			Port: loadInt("HTTP_PORT"),
+		},
+		Token: token.Config{
+			Secret:    loadString("TOKEN_SECRET"),
+			Issuer:    loadString("TOKEN_ISSUER"),
+			AccessTTL: loadDuration("TOKEN_ACCESS_TTL"),
 		},
 	}, nil
 }
