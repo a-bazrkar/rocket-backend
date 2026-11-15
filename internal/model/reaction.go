@@ -5,6 +5,9 @@ type Reaction struct {
 	UserID    int64
 	Emoji     string
 	CreatedAt int64
+
+	// relations
+	User *User
 }
 
 func (Reaction) TableName() string {

@@ -6,6 +6,10 @@ type Friend struct {
 	Status      string
 	CreatedAt   int64
 	UpdatedAt   int64
+
+	// relations
+	Requester *User
+	Addressee *User
 }
 
 func (Friend) TableName() string {

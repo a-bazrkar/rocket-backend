@@ -8,6 +8,9 @@ type Token struct {
 	CreatedAt  int64
 	ExpiresAt  int64
 	RevokedAt  *int64
+
+	// relations
+	User *User
 }
 
 func (Token) TableName() string {

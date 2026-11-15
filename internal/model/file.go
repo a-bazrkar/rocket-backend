@@ -14,6 +14,9 @@ type File struct {
 	Status     string
 	CreatedAt  int64
 	UpdatedAt  int64
+
+	// relations
+	Uploader *User
 }
 
 func (File) TableName() string {

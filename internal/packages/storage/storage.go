@@ -16,17 +16,17 @@ import (
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/spf13/afero"
+	"golang.org/x/image/webp"
 )
 
 var (
 	ErrEmpty    = errors.New("storage: file is empty")
 	ErrTooLarge = errors.New("storage: file is too large")
-	ErrMIME     = errors.New("storage: mime type is not allowed")
 	ErrNotFound = errors.New("storage: file not found")
 	ErrKey      = errors.New("storage: invalid key")
 )
 
-// Object is a stored file. Width and Height are 0 when the file is not a jpeg, png, or gif.
+// Object is a stored file. Width and Height are 0 unless the file is a jpeg, png, gif, or webp.
 type Object struct {
 	Key    string
 	Size   int64
@@ -59,8 +59,8 @@ func newStore(fs afero.Fs, max int64) *Store {
 	return &Store{fs: fs, max: max}
 }
 
-// Put hashes the body, checks its sniffed type, and writes it.
-// A second put of the same bytes returns the existing key.
+// Put hashes the body, sniffs its type, and writes it.
+// Any file under the size limit is stored. A second put of the same bytes returns the existing key.
 func (s *Store) Put(ctx context.Context, r io.Reader) (Object, error) {
 	if err := ctx.Err(); err != nil {
 		return Object{}, err
@@ -96,9 +96,6 @@ func (s *Store) Put(ctx context.Context, r io.Reader) (Object, error) {
 	mt, err := sniff(tmp)
 	if err != nil {
 		return Object{}, err
-	}
-	if !allowedMIME(mt) {
-		return Object{}, ErrMIME
 	}
 	mime := mt.String()
 	width, height := imageSize(tmp, mime)
@@ -201,33 +198,25 @@ func sniff(f afero.File) (*mimetype.MIME, error) {
 }
 
 func imageSize(f afero.File, mime string) (int, int) {
-	switch mime {
-	case "image/jpeg", "image/png", "image/gif":
-	default:
-		return 0, 0
-	}
 	if _, err := f.Seek(0, io.SeekStart); err != nil {
 		return 0, 0
 	}
-	cfg, _, err := image.DecodeConfig(f)
+	var (
+		cfg image.Config
+		err error
+	)
+	switch mime {
+	case "image/jpeg", "image/png", "image/gif":
+		cfg, _, err = image.DecodeConfig(f)
+	case "image/webp":
+		cfg, err = webp.DecodeConfig(f)
+	default:
+		return 0, 0
+	}
 	if err != nil {
 		return 0, 0
 	}
 	return cfg.Width, cfg.Height
-}
-
-func allowedMIME(mt *mimetype.MIME) bool {
-	for _, kind := range []string{
-		"image/jpeg", "image/png", "image/gif", "image/webp",
-		"video/mp4", "video/webm", "video/ogg",
-		"audio/mpeg", "audio/mp4", "audio/ogg", "audio/wav", "audio/webm",
-		"application/ogg", "application/pdf",
-	} {
-		if mt.Is(kind) {
-			return true
-		}
-	}
-	return false
 }
 
 func validKey(key string) bool {

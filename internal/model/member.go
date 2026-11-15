@@ -15,6 +15,12 @@ type Member struct {
 	LastReadMessageID      *int64
 	ClearedBeforeMessageID *int64
 	UpdatedAt              int64
+
+	// relations
+	Conversation         *Conversation
+	User                 *User
+	LastReadMessage      *Message
+	ClearedBeforeMessage *Message
 }
 
 func (Member) TableName() string {

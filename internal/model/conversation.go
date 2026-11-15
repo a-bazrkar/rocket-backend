@@ -9,10 +9,17 @@ type Conversation struct {
 	Description  *string
 	AvatarFileID *int64
 	ViewHistory  bool
-	CreatedBy    int64
+	CreatorID    int64
 	CreatedAt    int64
 	UpdatedAt    int64
 	DeletedAt    *int64
+
+	// relations
+	UserA      *User
+	UserB      *User
+	AvatarFile *File
+	Creator    *User
+	Members    []Member
 }
 
 func (Conversation) TableName() string {

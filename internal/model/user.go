@@ -11,6 +11,9 @@ type User struct {
 	CreatedAt    int64
 	UpdatedAt    int64
 	DeletedAt    *int64
+
+	// relations
+	AvatarFile *File
 }
 
 func (User) TableName() string {

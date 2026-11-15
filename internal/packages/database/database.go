@@ -11,9 +11,9 @@ import (
 
 type txKey struct{}
 
-// Repo is the handle repositories use. Writes are autocommit unless the
+// DB is the handle repositories use. Writes are autocommit unless the
 // context came from Transactor.Run. Close shuts down the shared pool.
-type Repo struct {
+type DB struct {
 	base *gorm.DB
 }
 
@@ -24,7 +24,7 @@ type Transactor struct {
 }
 
 // New opens one pool and returns two handles over it.
-func New(cfg Config) (*Repo, *Transactor, error) {
+func New(cfg Config) (*DB, *Transactor, error) {
 	gormDB, err := gorm.Open(sqlite.Open(buildDSN(cfg)), &gorm.Config{
 		SkipDefaultTransaction: true,
 	})
@@ -46,11 +46,11 @@ func New(cfg Config) (*Repo, *Transactor, error) {
 		return nil, nil, fmt.Errorf("database: ping: %w", err)
 	}
 
-	return &Repo{base: gormDB}, &Transactor{base: gormDB}, nil
+	return &DB{base: gormDB}, &Transactor{base: gormDB}, nil
 }
 
 // Close closes the shared pool.
-func (r *Repo) Close() error {
+func (r *DB) Close() error {
 	sqlDB, err := r.base.DB()
 	if err != nil {
 		return err
@@ -59,7 +59,7 @@ func (r *Repo) Close() error {
 }
 
 // GORM returns the transaction stored in ctx, or the plain pool when there is none.
-func (r *Repo) GORM(ctx context.Context) *gorm.DB {
+func (r *DB) GORM(ctx context.Context) *gorm.DB {
 	if tx, ok := txFromContext(ctx); ok {
 		return tx.WithContext(ctx)
 	}

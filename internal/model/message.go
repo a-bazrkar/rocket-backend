@@ -15,6 +15,14 @@ type Message struct {
 	UpdatedAt           int64
 	EditedAt            *int64
 	DeletedAt           *int64
+
+	// relations
+	Conversation      *Conversation
+	Sender            *User
+	ReplyToMessage    *Message
+	ForwardedFromUser *User
+	Attachments       []Attachment
+	Reactions         []Reaction
 }
 
 func (Message) TableName() string {

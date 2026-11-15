@@ -123,7 +123,7 @@ CREATE TABLE conversations (
     view_history    INTEGER NOT NULL CHECK (view_history IN (0, 1)),
 
     -- common
-    created_by      INTEGER NOT NULL REFERENCES users(id),
+    creator_id      INTEGER NOT NULL REFERENCES users(id),
     created_at      INTEGER NOT NULL,
     updated_at      INTEGER NOT NULL,
     deleted_at      INTEGER,
@@ -131,7 +131,7 @@ CREATE TABLE conversations (
     CHECK (
         (type = 'group' AND user_a_id IS NULL AND user_b_id IS NULL AND name IS NOT NULL) OR
         (type = 'direct' AND user_a_id IS NOT NULL AND user_b_id IS NOT NULL AND user_a_id < user_b_id
-            AND created_by IN (user_a_id, user_b_id)
+            AND creator_id IN (user_a_id, user_b_id)
             AND name IS NULL AND description IS NULL AND avatar_file_id IS NULL) OR
         (type = 'self' AND user_a_id IS NULL AND user_b_id IS NULL
             AND name IS NULL AND description IS NULL AND avatar_file_id IS NULL)
@@ -142,7 +142,7 @@ CREATE TABLE conversations (
 CREATE UNIQUE INDEX conversations_pair_uq
     ON conversations (user_a_id, user_b_id) WHERE type = 'direct' AND deleted_at IS NULL;
 CREATE UNIQUE INDEX conversations_self_uq
-    ON conversations (created_by) WHERE type = 'self' AND deleted_at IS NULL;
+    ON conversations (creator_id) WHERE type = 'self' AND deleted_at IS NULL;
 CREATE INDEX conversations_avatar_idx
     ON conversations (avatar_file_id) WHERE avatar_file_id IS NOT NULL;
 
@@ -254,7 +254,7 @@ CREATE TABLE reactions (
 CREATE TABLE invites (
     code            TEXT PRIMARY KEY,
     conversation_id INTEGER NOT NULL REFERENCES conversations(id),
-    created_by      INTEGER NOT NULL REFERENCES users(id),
+    creator_id      INTEGER NOT NULL REFERENCES users(id),
     max_uses        INTEGER CHECK (max_uses IS NULL OR max_uses > 0),
     use_count       INTEGER NOT NULL CHECK (use_count >= 0),
     expires_at      INTEGER,
