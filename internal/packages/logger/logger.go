@@ -22,7 +22,7 @@ func New(cfg Config) (zerolog.Logger, error) {
 		out = zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339}
 	}
 
-	return zerolog.New(out).Level(level).With().Timestamp().Logger(), nil
+	return zerolog.New(out).Level(level).With().Timestamp().Caller().Logger(), nil
 }
 
 func parseLevel(level string) (zerolog.Level, error) {

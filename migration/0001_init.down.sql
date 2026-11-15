@@ -1,0 +1,15 @@
+PRAGMA foreign_keys = OFF;
+
+DROP TABLE IF EXISTS reactions;
+DROP TABLE IF EXISTS attachments;
+DROP TABLE IF EXISTS invites;
+DROP TABLE IF EXISTS members;
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS conversations;
+DROP TABLE IF EXISTS friends;
+DROP TABLE IF EXISTS blocks;
+DROP TABLE IF EXISTS tokens;
+DROP TABLE IF EXISTS files;
+DROP TABLE IF EXISTS users;
+
+PRAGMA foreign_keys = ON;

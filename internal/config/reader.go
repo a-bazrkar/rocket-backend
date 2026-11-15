@@ -7,6 +7,7 @@ import (
 	"github.com/a-bazrkar/rocket-backend/internal/packages/database"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/storage"
+	"github.com/a-bazrkar/rocket-backend/internal/transport/rest"
 	"github.com/spf13/viper"
 )
 
@@ -37,6 +38,10 @@ func Load() (*Config, error) {
 		Storage: storage.Config{
 			Root:     loadString("STORAGE_ROOT"),
 			MaxBytes: loadInt64("STORAGE_MAX_BYTES"),
+		},
+		HTTP: rest.Config{
+			Host: loadString("HTTP_HOST"),
+			Port: loadInt("HTTP_PORT"),
 		},
 	}, nil
 }

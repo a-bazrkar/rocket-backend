@@ -3,34 +3,26 @@ package main
 import (
 	"os"
 
-	"github.com/a-bazrkar/rocket-backend/internal/config"
-	"github.com/a-bazrkar/rocket-backend/internal/packages/database"
-	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
+	"github.com/a-bazrkar/rocket-backend/cmd/migrate"
+	"github.com/a-bazrkar/rocket-backend/cmd/server"
+	"github.com/spf13/cobra"
 )
 
 func main() {
-
-	// load configs
-	cfg, err := config.Load()
-	if err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
-		os.Exit(1)
+	root := &cobra.Command{
+		Use:           "rocket",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 
-	// init logger
-	log, err := logger.New(cfg.Logger)
-	if err != nil {
-		os.Stderr.WriteString(err.Error() + "\n")
+	// add commands
+	root.AddCommand(
+		server.Command(),
+		migrate.Command(),
+	)
+
+	// execute root command
+	if err := root.Execute(); err != nil {
 		os.Exit(1)
 	}
-
-	// init gorm
-	repo, _, err := database.New(cfg.Database)
-	if err != nil {
-		log.Error().Err(err).Msg("database init failed")
-		os.Exit(1)
-	}
-	defer repo.Close()
-
-	log.Info().Str("path", cfg.Database.Path).Msg("ready")
 }
