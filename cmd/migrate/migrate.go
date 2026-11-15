@@ -8,7 +8,6 @@ import (
 	"github.com/a-bazrkar/rocket-backend/internal/config"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/database"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
-	"github.com/a-bazrkar/rocket-backend/migration"
 	"github.com/spf13/cobra"
 )
 
@@ -83,7 +82,7 @@ func run(fn func(context.Context, *database.Migrator) error) error {
 
 	// create migrator
 	ctx := context.Background()
-	migrator := database.NewMigratorFS(db, migration.FS)
+	migrator := database.NewMigrator(db, "migration")
 
 	// run migration
 	if err := fn(ctx, migrator); err != nil {

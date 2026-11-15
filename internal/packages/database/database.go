@@ -3,6 +3,8 @@ package database
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/glebarez/sqlite"
@@ -25,6 +27,9 @@ type Transactor struct {
 
 // New opens one pool and returns two handles over it.
 func New(cfg Config) (*DB, *Transactor, error) {
+	if err := ensureDir(cfg.Path); err != nil {
+		return nil, nil, err
+	}
 	gormDB, err := gorm.Open(sqlite.Open(buildDSN(cfg)), &gorm.Config{
 		SkipDefaultTransaction: true,
 	})
@@ -85,6 +90,20 @@ func withTx(ctx context.Context, tx *gorm.DB) context.Context {
 func txFromContext(ctx context.Context) (*gorm.DB, bool) {
 	tx, ok := ctx.Value(txKey{}).(*gorm.DB)
 	return tx, ok && tx != nil
+}
+
+func ensureDir(path string) error {
+	if path == "" || path == ":memory:" {
+		return nil
+	}
+	dir := filepath.Dir(path)
+	if dir == "." || dir == "" {
+		return nil
+	}
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		return fmt.Errorf("database: create directory: %w", err)
+	}
+	return nil
 }
 
 func buildDSN(cfg Config) string {
