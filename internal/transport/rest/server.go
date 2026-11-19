@@ -9,6 +9,10 @@ import (
 	ginLogger "github.com/gin-contrib/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
+
+	"github.com/a-bazrkar/rocket-backend/internal/errs"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/recovery"
+	"github.com/a-bazrkar/rocket-backend/internal/transport/rest/middleware"
 )
 
 type Server struct {
@@ -18,16 +22,16 @@ type Server struct {
 
 // New creates the engine and the base middleware. Routes are added with SetupRoutes.
 func New(log zerolog.Logger) *Server {
+	errs.MustLoad()
 
 	// create gin engine
 	engine := gin.New()
 
 	// create middlewares
 	logMiddleware := ginLogger.SetLogger(ginLogger.WithLogger(func(*gin.Context, zerolog.Logger) zerolog.Logger { return log }))
-	recoveryMiddleware := gin.Recovery()
 
-	// use middlewares
-	engine.Use(logMiddleware, recoveryMiddleware)
+	// panic recovery first, then request id, access log, and leftover handler errors
+	engine.Use(recovery.Gin(log), middleware.RequestID(), logMiddleware, middleware.Errors(log))
 
 	// return server
 	return &Server{log: log, engine: engine}

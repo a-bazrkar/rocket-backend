@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/a-bazrkar/rocket-backend/internal/config"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/a-bazrkar/rocket-backend/internal/transport/rest"
 	"github.com/spf13/cobra"
@@ -44,6 +45,7 @@ func Command() *cobra.Command {
 			log.Info().Str("addr", addr).Msg("server listening")
 
 			// create HTTP server
+			errcore.SetDebug(cfg.Debug)
 			srv := rest.New(log)
 
 			// setup routes

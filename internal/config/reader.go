@@ -26,6 +26,7 @@ func Load() (*Config, error) {
 	}
 
 	return &Config{
+		Debug: loadBool("APP_DEBUG"),
 		Logger: logger.Config{
 			Level:  loadString("LOG_LEVEL"),
 			Pretty: loadBool("LOG_PRETTY"),
