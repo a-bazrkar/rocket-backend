@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/transport"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 )
 
 // Errors writes a leftover Gin error after the handler returns.
 // AbortWithError from a handler marks the error handled, so this does not log it again.
-func Errors(log zerolog.Logger) gin.HandlerFunc {
+func Errors(log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		transport.SetLogger(c, log)
 		c.Next()

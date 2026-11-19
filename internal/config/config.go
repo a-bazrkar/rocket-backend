@@ -11,6 +11,7 @@ import (
 // Config is the process configuration. Load fills it from the environment.
 type Config struct {
 	Debug    bool
+	Metrics  bool
 	Logger   logger.Config
 	Database database.Config
 	Storage  storage.Config

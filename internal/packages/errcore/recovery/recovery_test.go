@@ -12,9 +12,9 @@ import (
 
 	"github.com/a-bazrkar/rocket-backend/internal/errs"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/rs/zerolog"
 )
 
 func TestMain(m *testing.M) {
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 
 func TestGinPanicReturnsGenericError(t *testing.T) {
 	var buf strings.Builder
-	log := zerolog.New(&buf)
+	log := logger.Writer(&buf)
 	r := gin.New()
 	r.Use(Gin(log))
 	r.GET("/boom", func(c *gin.Context) {
@@ -66,7 +66,7 @@ func TestGinPanicIncludesStackWhenDebug(t *testing.T) {
 	errcore.SetDebug(true)
 	t.Cleanup(func() { errcore.SetDebug(false) })
 	r := gin.New()
-	r.Use(Gin(zerolog.Nop()))
+	r.Use(Gin(logger.Nop()))
 	r.GET("/boom", func(c *gin.Context) {
 		panic("panic-token-secret")
 	})
@@ -87,7 +87,7 @@ func TestGinPanicIncludesStackWhenDebug(t *testing.T) {
 
 func TestGinPanicKeepsWrittenBody(t *testing.T) {
 	r := gin.New()
-	r.Use(Gin(zerolog.Nop()))
+	r.Use(Gin(logger.Nop()))
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "partial")
 		panic("panic-after-write")
@@ -106,7 +106,7 @@ func TestGinPanicKeepsWrittenBody(t *testing.T) {
 func TestGoPanicClosesWithoutLeaking(t *testing.T) {
 	server, client := wsPair(t)
 	var buf strings.Builder
-	log := zerolog.New(&buf)
+	log := logger.Writer(&buf)
 	Go(log, server, ConnContext{RequestID: "req-9", ConnectionID: "conn-1", UserID: 4}, func() {
 		panic("panic-token-secret")
 	})
@@ -141,7 +141,7 @@ func TestGoPanicClosesWithoutLeaking(t *testing.T) {
 func TestGoNilConnectionLogsPanic(t *testing.T) {
 	logged := make(chan struct{})
 	writer := &notifyWriter{ch: logged}
-	log := zerolog.New(writer)
+	log := logger.Writer(writer)
 	Go(log, nil, ConnContext{ConnectionID: "solo"}, func() {
 		panic("nil-conn-panic")
 	})
@@ -172,7 +172,7 @@ func TestGoPanicCloseRacesWithDataWriter(t *testing.T) {
 		}
 	}()
 
-	Go(zerolog.Nop(), server, ConnContext{ConnectionID: "race"}, func() {
+	Go(logger.Nop(), server, ConnContext{ConnectionID: "race"}, func() {
 		panic("race-panic-token")
 	})
 

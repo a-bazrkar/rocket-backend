@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/a-bazrkar/rocket-backend/internal/packages/metrics"
 	"github.com/glebarez/sqlite"
 	"gorm.io/gorm"
 )
@@ -52,6 +53,15 @@ func New(cfg Config) (*DB, *Transactor, error) {
 	}
 
 	return &DB{base: gormDB}, &Transactor{base: gormDB}, nil
+}
+
+// EnableMetrics records query counts and durations for this pool.
+// Call it only when metrics are enabled.
+func (r *DB) EnableMetrics() {
+	if r == nil {
+		return
+	}
+	metrics.Instrument(r.base)
 }
 
 // Close closes the shared pool.

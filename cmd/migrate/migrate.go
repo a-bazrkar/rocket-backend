@@ -75,10 +75,13 @@ func run(fn func(context.Context, *database.Migrator) error) error {
 	// create database
 	db, _, err := database.New(cfg.Database)
 	if err != nil {
-		log.Error().Err(err).Msg("database init failed")
+		log.WithLevel(logger.Error).Err(err).Msg("database init failed")
 		return err
 	}
 	defer db.Close()
+	if cfg.Metrics {
+		db.EnableMetrics()
+	}
 
 	// create migrator
 	ctx := context.Background()
@@ -86,16 +89,16 @@ func run(fn func(context.Context, *database.Migrator) error) error {
 
 	// run migration
 	if err := fn(ctx, migrator); err != nil {
-		log.Error().Err(err).Msg("migration failed")
+		log.WithLevel(logger.Error).Err(err).Msg("migration failed")
 		return err
 	}
 
 	// print schema version
 	version, dirty, err := migrator.Version(ctx)
 	if err != nil {
-		log.Error().Err(err).Msg("schema version")
+		log.WithLevel(logger.Error).Err(err).Msg("schema version")
 		return err
 	}
-	log.Info().Int64("version", version).Bool("dirty", dirty).Msg("schema")
+	log.WithLevel(logger.Info).Int64("version", version).Bool("dirty", dirty).Msg("schema")
 	return nil
 }

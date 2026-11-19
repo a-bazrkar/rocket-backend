@@ -11,8 +11,8 @@ import (
 	"github.com/a-bazrkar/rocket-backend/internal/errs"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/transport"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 )
 
 func TestMain(m *testing.M) {
@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 
 func TestErrorsWritesLeftoverErrorOnce(t *testing.T) {
 	r := gin.New()
-	r.Use(Errors(zerolog.Nop()))
+	r.Use(Errors(logger.Nop()))
 	r.GET("/", func(c *gin.Context) {
 		_ = c.Error(errcore.New(nil, errs.MessageNotFound))
 	})
@@ -44,7 +44,7 @@ func TestErrorsWritesLeftoverErrorOnce(t *testing.T) {
 func TestErrorsSkipsHandledAbort(t *testing.T) {
 	var buf strings.Builder
 	r := gin.New()
-	r.Use(Errors(zerolog.New(&buf)))
+	r.Use(Errors(logger.Writer(&buf)))
 	r.GET("/", func(c *gin.Context) {
 		ctx := errcore.WithRequestID(c.Request.Context(), "req-7")
 		c.Request = c.Request.WithContext(ctx)

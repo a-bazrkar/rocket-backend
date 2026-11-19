@@ -6,10 +6,10 @@ import (
 
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/classify"
-	"github.com/rs/zerolog"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 )
 
-func report(log zerolog.Logger, value any, stack []byte, ctx context.Context, scope classify.Scope) classify.Classification {
+func report(log logger.Logger, value any, stack []byte, ctx context.Context, scope classify.Scope) classify.Classification {
 	err := errcore.Wrap(ctx, errcore.CodeInternalPanicRecovered, panicCause(value))
 	class := classify.Classify(err)
 	class.Stack = string(stack)

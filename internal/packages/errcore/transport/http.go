@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/classify"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 )
 
 const (
@@ -55,17 +55,17 @@ func requestContext(c *gin.Context) context.Context {
 	return c.Request.Context()
 }
 
-func loggerOf(c *gin.Context) zerolog.Logger {
+func loggerOf(c *gin.Context) logger.Logger {
 	if c == nil {
-		return zerolog.Nop()
+		return logger.Nop()
 	}
 	v, ok := c.Get(contextLoggerKey)
 	if !ok {
-		return zerolog.Nop()
+		return logger.Nop()
 	}
-	log, ok := v.(zerolog.Logger)
-	if !ok {
-		return zerolog.Nop()
+	log, ok := v.(logger.Logger)
+	if !ok || log == nil {
+		return logger.Nop()
 	}
 	return log
 }
@@ -85,7 +85,7 @@ func markHandled(c *gin.Context) {
 
 // SetLogger stores the request logger used by AbortWithError.
 // The HTTP middleware calls it before the handler runs.
-func SetLogger(c *gin.Context, log zerolog.Logger) {
+func SetLogger(c *gin.Context, log logger.Logger) {
 	if c == nil {
 		return
 	}

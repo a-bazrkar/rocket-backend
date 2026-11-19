@@ -11,7 +11,7 @@ import (
 
 	"github.com/a-bazrkar/rocket-backend/internal/errs"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
-	"github.com/rs/zerolog"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 )
 
 func TestMain(m *testing.M) {
@@ -121,7 +121,7 @@ func TestClassifyLevels(t *testing.T) {
 
 func TestLogRedactsMetadataAndKeepsContext(t *testing.T) {
 	var buf bytes.Buffer
-	log := zerolog.New(&buf)
+	log := logger.Writer(&buf)
 	err := errcore.New(nil, errs.AuthInvalidToken).WithMetadata(map[string]any{
 		"password": "s3cret",
 		"token":    "raw-token",
@@ -173,7 +173,7 @@ func TestLogKeepsSnapshotWithoutLiveContext(t *testing.T) {
 	ctx := errcore.WithRequestID(context.Background(), "req-snap")
 	err := errcore.New(ctx, errs.UserNotFound)
 	var buf bytes.Buffer
-	Log(zerolog.New(&buf), Classify(err), context.Background(), Scope{Transport: "http", Component: "http"})
+	Log(logger.Writer(&buf), Classify(err), context.Background(), Scope{Transport: "http", Component: "http"})
 	if !strings.Contains(buf.String(), "req-snap") {
 		t.Fatalf("log dropped snapshot: %s", buf.String())
 	}
@@ -184,7 +184,7 @@ func TestLogFillsMissingIDFromLiveContext(t *testing.T) {
 	err := errcore.New(built, errs.UserNotFound)
 	live := errcore.WithUserID(context.Background(), 9)
 	var buf bytes.Buffer
-	Log(zerolog.New(&buf), Classify(err), live, Scope{Transport: "http", Component: "http"})
+	Log(logger.Writer(&buf), Classify(err), live, Scope{Transport: "http", Component: "http"})
 	line := buf.String()
 	if !strings.Contains(line, "req-snap") || !strings.Contains(line, `"user_id":9`) {
 		t.Fatalf("log = %s", line)
@@ -193,7 +193,7 @@ func TestLogFillsMissingIDFromLiveContext(t *testing.T) {
 
 func TestLogSkipsNilClassification(t *testing.T) {
 	var buf bytes.Buffer
-	Log(zerolog.New(&buf), Classify(nil), context.Background(), Scope{Transport: "http", Component: "http"})
+	Log(logger.Writer(&buf), Classify(nil), context.Background(), Scope{Transport: "http", Component: "http"})
 	if buf.Len() != 0 {
 		t.Fatalf("logged nil error: %s", buf.String())
 	}
@@ -231,7 +231,7 @@ func TestLogRedactsNestedMetadata(t *testing.T) {
 	}
 
 	var buf bytes.Buffer
-	Log(zerolog.New(&buf), class, context.Background(), Scope{Transport: "http", Component: "http"})
+	Log(logger.Writer(&buf), class, context.Background(), Scope{Transport: "http", Component: "http"})
 	line := buf.String()
 	if strings.Contains(line, "nested-secret") || strings.Contains(line, "raw-access") {
 		t.Fatalf("log leaked nested secrets: %s", line)

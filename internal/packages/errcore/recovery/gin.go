@@ -6,14 +6,14 @@ import (
 
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/classify"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/transport"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 )
 
 // Gin returns Gin's official recovery middleware.
-// The nil writer skips Gin's own logger. The panic is logged once through Zerolog.
+// The nil writer skips Gin's own logger. The panic is logged once through the application logger.
 // A body that was already written is left unchanged.
-func Gin(log zerolog.Logger) gin.HandlerFunc {
+func Gin(log logger.Logger) gin.HandlerFunc {
 	return gin.CustomRecoveryWithWriter(nil, func(c *gin.Context, recovered any) {
 		method, path := "", ""
 		if c != nil && c.Request != nil {

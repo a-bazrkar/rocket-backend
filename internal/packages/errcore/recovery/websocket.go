@@ -7,8 +7,8 @@ import (
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/classify"
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore/transport"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 	"github.com/gorilla/websocket"
-	"github.com/rs/zerolog"
 )
 
 // ConnContext is the connection data included in a panic log.
@@ -23,7 +23,7 @@ type ConnContext struct {
 // Go runs fn in a new goroutine and recovers a panic in that goroutine.
 // The panic is logged with cc. When conn is set, a close frame is sent with
 // WriteControl so it does not share the data-frame writer. A nil conn is only logged.
-func Go(log zerolog.Logger, conn *websocket.Conn, cc ConnContext, fn func()) {
+func Go(log logger.Logger, conn *websocket.Conn, cc ConnContext, fn func()) {
 	if fn == nil {
 		return
 	}
@@ -40,8 +40,8 @@ func Go(log zerolog.Logger, conn *websocket.Conn, cc ConnContext, fn func()) {
 			if conn == nil {
 				return
 			}
-			if err := transport.WriteClose(conn, transport.CloseCodePanic, class.Message); err != nil {
-				log.Error().Err(err).Str("connection_id", cc.ConnectionID).Msg("websocket close after panic failed")
+			if err := transport.WriteClose(conn, transport.CloseCodePanic, class.Message); err != nil && log != nil {
+				log.WithLevel(logger.Error).Err(err).Str("connection_id", cc.ConnectionID).Msg("websocket close after panic failed")
 			}
 		}()
 		fn()

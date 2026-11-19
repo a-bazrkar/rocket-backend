@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 )
 
 func init() {
@@ -15,7 +15,7 @@ func init() {
 }
 
 func TestServerPanicStaysInternal(t *testing.T) {
-	s := New(zerolog.Nop())
+	s := New(logger.Nop())
 	s.engine.GET("/panic", func(c *gin.Context) {
 		panic("server-panic-token")
 	})

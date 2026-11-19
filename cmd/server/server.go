@@ -42,18 +42,21 @@ func Command() *cobra.Command {
 
 			// create HTTP server address
 			addr := net.JoinHostPort(cfg.HTTP.Host, strconv.Itoa(cfg.HTTP.Port))
-			log.Info().Str("addr", addr).Msg("server listening")
+			log.WithLevel(logger.Info).Str("addr", addr).Msg("server listening")
 
 			// create HTTP server
 			errcore.SetDebug(cfg.Debug)
 			srv := rest.New(log)
+			if cfg.Metrics {
+				srv.MountMetrics()
+			}
 
 			// setup routes
 			srv.SetupRoutes()
 
 			// run HTTP server
 			if err := srv.Run(ctx, addr); err != nil {
-				log.Error().Err(err).Msg("server stopped")
+				log.WithLevel(logger.Error).Err(err).Msg("server stopped")
 				return err
 			}
 			return nil

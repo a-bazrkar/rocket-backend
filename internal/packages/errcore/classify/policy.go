@@ -6,21 +6,21 @@ import (
 	"strings"
 
 	"github.com/a-bazrkar/rocket-backend/internal/packages/errcore"
-	"github.com/rs/zerolog"
+	"github.com/a-bazrkar/rocket-backend/internal/packages/logger"
 )
 
-func zerologLevel(level errcore.LogLevel) zerolog.Level {
+func loggerLevel(level errcore.LogLevel) logger.Level {
 	switch level {
 	case errcore.LogDebug:
-		return zerolog.DebugLevel
+		return logger.Debug
 	case errcore.LogInfo:
-		return zerolog.InfoLevel
+		return logger.Info
 	case errcore.LogWarn:
-		return zerolog.WarnLevel
+		return logger.Warn
 	case errcore.LogError:
-		return zerolog.ErrorLevel
+		return logger.Error
 	default:
-		return zerolog.ErrorLevel
+		return logger.Error
 	}
 }
 
@@ -28,14 +28,11 @@ func zerologLevel(level errcore.LogLevel) zerolog.Level {
 // Context fields are read from ctx. scope identifies the caller.
 // A classification that should not be logged, or a disabled level, writes nothing.
 // Classify does not call Log.
-func Log(log zerolog.Logger, class Classification, ctx context.Context, scope Scope) {
-	if !class.ShouldLog {
+func Log(log logger.Logger, class Classification, ctx context.Context, scope Scope) {
+	if !class.ShouldLog || log == nil {
 		return
 	}
-	ev := log.WithLevel(zerologLevel(class.LogLevel))
-	if ev == nil {
-		return
-	}
+	ev := log.WithLevel(loggerLevel(class.LogLevel))
 	ev.Str("error_code", string(class.Code))
 	ev.Str("error_category", string(class.Category))
 	if class.Cause != nil {

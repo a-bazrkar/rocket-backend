@@ -10,7 +10,7 @@ Services return ordinary Go errors. One registry decides the public code, the pu
 |---|---|
 | `internal/errs` | Application catalog. This is the only place to add a product error. |
 | `internal/packages/errcore` | Engine: types, registry, constructors, request context. No Gin, Gorilla, or Zerolog. |
-| `internal/packages/errcore/classify` | `Classify` turns any `error` into a classification and does not log. `Log` writes one Zerolog event. |
+| `internal/packages/errcore/classify` | `Classify` turns any `error` into a classification and does not log. `Log` writes one event through `logger.Logger`. |
 | `internal/packages/errcore/transport` | HTTP JSON and WebSocket frames. |
 | `internal/packages/errcore/recovery` | Panic recovery for Gin handlers and WebSocket goroutines. |
 
@@ -34,7 +34,7 @@ internal/errs  --MustLoad-->  packages/errcore registry
         v
 classification
         |
-        +--> Zerolog (once)
+        +--> application logger (once)
         +--> HTTP JSON  or  WebSocket event / close frame
 ```
 
@@ -257,7 +257,7 @@ Rules, in order:
 
 ## Logging
 
-`classify.Log` writes one Zerolog event when `ShouldLog` is true and the logger level allows the event.
+`classify.Log` writes one structured event through `logger.Logger` when `ShouldLog` is true and the logger level allows the event. Zerolog is the current implementation of that interface and is imported only by `internal/packages/logger`.
 
 Fields, when present:
 
@@ -265,7 +265,7 @@ Fields, when present:
 |---|---|
 | `error_code` | classification code |
 | `error_category` | classification category |
-| `error` | original cause, via Zerolog `Err` |
+| `error` | original cause, via the logger `Err` field |
 | `request_id` | context |
 | `trace_id` | context |
 | `user_id` | context |
@@ -282,7 +282,7 @@ The event message is `error`.
 
 Context keys live on the engine (`WithRequestID`, `RequestID`, and the same pair for trace ID, user ID, conversation ID, and connection ID). `New` and `Wrap` copy those ids onto the error. `classify.Log` prefers that copy and fills any missing id from the context passed at log time. Empty strings are not stored. Integer IDs are stored even when zero if `WithUserID` or `WithConversationID` is called. WebSocket panic recovery treats user ID `0` and conversation ID `0` as absent and does not call those setters.
 
-Redaction applies to metadata keys, case-insensitive, with `-` treated as `_`. Exact keys: `password`, `password_hash`, `passwd`, `secret`, `session`, `token`, `access_token`, `refresh_token`, `id_token`, `authorization`, `cookie`, `set_cookie`, `content`, `message`, `body`. Any key containing `password`, `secret`, or `token` is redacted. The replacement value is `[redacted]`. Nested `map[string]any` values are walked. Metadata is one log object. Its keys are never promoted to Zerolog field names. Nested maps and slices are walked. A sensitive key inside them is replaced with `[redacted]`. Redaction is a backstop. Callers still must not put secrets in metadata. Client responses do not include metadata.
+Redaction applies to metadata keys, case-insensitive, with `-` treated as `_`. Exact keys: `password`, `password_hash`, `passwd`, `secret`, `session`, `token`, `access_token`, `refresh_token`, `id_token`, `authorization`, `cookie`, `set_cookie`, `content`, `message`, `body`. Any key containing `password`, `secret`, or `token` is redacted. The replacement value is `[redacted]`. Nested maps and slices are walked. Metadata is one log object. Its keys are never promoted to logger field names. Redaction is a backstop. Callers still must not put secrets in metadata. Client responses do not include metadata.
 
 Who logs:
 
@@ -291,7 +291,7 @@ Who logs:
 - `transport.WriteHTTPError` does not log. Panic recovery logs first, then calls it.
 - A second `AbortWithError` on the same request does not log again and does not replace a written body.
 
-Validation and not-found stay at info. Authentication and authorization stay at warn. Database, external, and internal failures are error. A disabled Zerolog level drops the event.
+Validation and not-found stay at info. Authentication and authorization stay at warn. Database, external, and internal failures are error. A disabled logger level drops the event.
 
 ## Public responses
 
