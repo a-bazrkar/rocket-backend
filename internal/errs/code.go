@@ -54,6 +54,10 @@ const (
 	DatabaseConnectionFailed   errcore.Code = "database.connection_failed"
 	ExternalServiceUnavailable errcore.Code = "external.service_unavailable"
 
-	InternalUnexpectedError = errcore.CodeInternalUnexpectedError
-	InternalPanicRecovered  = errcore.CodeInternalPanicRecovered
+	WebsocketMethodNotFound  errcore.Code = "websocket.method_not_found"
+	WebsocketInvalidMessage  errcore.Code = "websocket.invalid_message"
+	WebsocketConnectionLimit errcore.Code = "websocket.connection_limit"
+
+	InternalUnexpectedError errcore.Code = errcore.CodeInternalUnexpectedError
+	InternalPanicRecovered  errcore.Code = errcore.CodeInternalPanicRecovered
 )

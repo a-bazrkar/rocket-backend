@@ -18,6 +18,7 @@ func Definitions() []errcore.Definition {
 		inviteDefinitions(),
 		validationDefinitions(),
 		platformDefinitions(),
+		websocketDefinitions(),
 		internalDefinitions(),
 	}
 	n := 0

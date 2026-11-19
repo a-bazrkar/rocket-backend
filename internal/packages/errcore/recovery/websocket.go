@@ -27,25 +27,34 @@ func Go(log logger.Logger, conn *websocket.Conn, cc ConnContext, fn func()) {
 	if fn == nil {
 		return
 	}
-	go func() {
-		defer func() {
-			value := recover()
-			if value == nil {
-				return
-			}
-			class := report(log, value, debug.Stack(), cc.context(), classify.Scope{
-				Transport: "websocket",
-				Component: "websocket",
-			})
-			if conn == nil {
-				return
-			}
-			if err := transport.WriteClose(conn, transport.CloseCodePanic, class.Message); err != nil && log != nil {
-				log.WithLevel(logger.Error).Err(err).Str("connection_id", cc.ConnectionID).Msg("websocket close after panic failed")
-			}
-		}()
-		fn()
+	go Do(log, conn, cc, fn)
+}
+
+// Do runs fn on the caller goroutine and recovers a panic there.
+// The panic is logged with cc. When conn is set, a close frame is sent with
+// WriteControl so it does not share the data-frame writer. A nil conn is only logged.
+// The caller can close conn after Do returns; the close frame is sent first.
+func Do(log logger.Logger, conn *websocket.Conn, cc ConnContext, fn func()) {
+	if fn == nil {
+		return
+	}
+	defer func() {
+		value := recover()
+		if value == nil {
+			return
+		}
+		class := report(log, value, debug.Stack(), cc.context(), classify.Scope{
+			Transport: "websocket",
+			Component: "websocket",
+		})
+		if conn == nil {
+			return
+		}
+		if err := transport.WriteClose(conn, transport.CloseCodePanic, class.Message); err != nil && log != nil {
+			log.WithLevel(logger.Error).Err(err).Str("connection_id", cc.ConnectionID).Msg("websocket close after panic failed")
+		}
 	}()
+	fn()
 }
 
 func (cc ConnContext) context() context.Context {

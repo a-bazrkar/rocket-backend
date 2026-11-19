@@ -74,6 +74,9 @@ var catalog = []errcore.Code{
 	DatabaseQueryFailed,
 	DatabaseConnectionFailed,
 	ExternalServiceUnavailable,
+	WebsocketMethodNotFound,
+	WebsocketInvalidMessage,
+	WebsocketConnectionLimit,
 	InternalUnexpectedError,
 	InternalPanicRecovered,
 }
